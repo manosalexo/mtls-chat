@@ -32,7 +32,7 @@ public class ChatClient {
     private BufferedReader in;
     private PrintWriter out;
 
-    private final JFrame frame = new JFrame("Chatter");
+    private final JFrame frame = new JFrame("mTLS Chat");
     private final JTextField textField = new JTextField(40);
     private final JTextArea messageArea = new JTextArea(8, 40);
 
@@ -55,7 +55,7 @@ public class ChatClient {
     private String getServerAddress() {
         return JOptionPane.showInputDialog(
                 frame, "Enter IP Address of the Server:",
-                "Welcome to the Chatter",
+                "Welcome to mTLS Chat",
                 JOptionPane.QUESTION_MESSAGE);
     }
 

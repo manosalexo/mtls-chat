@@ -1,6 +1,6 @@
-# SSLchat
+# mTLS Chat
 
-A multi-threaded chat application with mutual TLS (mTLS) authentication in Java.
+A multi-threaded chat application demonstrating mutual TLS (mTLS) authentication in Java.
 
 ## Requirements
 
@@ -22,12 +22,12 @@ mkdir keystore && cd keystore
 
 # Generate server keypair
 keytool -genkeypair -alias server -keyalg RSA -keysize 2048 \
-  -dname "CN=ChatServer,OU=Dev,O=SSLchat,L=Athens,C=GR" \
+  -dname "CN=Server,OU=Dev,O=mTLS-Chat,L=Athens,C=GR" \
   -keystore server.p12 -storetype PKCS12 -storepass changeit
 
 # Generate client keypair
 keytool -genkeypair -alias client -keyalg RSA -keysize 2048 \
-  -dname "CN=ChatClient,OU=Dev,O=SSLchat,L=Athens,C=GR" \
+  -dname "CN=Client,OU=Dev,O=mTLS-Chat,L=Athens,C=GR" \
   -keystore client.p12 -storetype PKCS12 -storepass changeit
 
 # Export and import server certificate into client trust store
