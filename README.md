@@ -2,6 +2,16 @@
 
 A multi-threaded chat application demonstrating mutual TLS (mTLS) authentication in Java.
 
+Both server and client authenticate each other via X.509 certificates over TLSv1.3, ensuring that only trusted parties can connect.
+
+## Getting Started
+
+```bash
+git clone https://github.com/manosalexo/mtls-chat.git
+cd mtls-chat
+./gradlew build
+```
+
 ## Requirements
 
 - Java 17+
