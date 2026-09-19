@@ -1,41 +1,84 @@
-Quick guide to create cerftificates using Java 11 keytool.
+# SSLchat
 
-Example:
+A multi-threaded chat application with mutual TLS (mTLS) authentication in Java.
 
-mkdir ssldemo and cd ssldemo
+## Requirements
 
-Generate the Client and Server Keystores
+- Java 17+
+- Gradle (or use the wrapper)
 
-$ keytool -genkeypair -alias plainserverkeys -keyalg RSA -dname "CN=PlainServer,OU=PADA,O=CS,L=ATHENS,S=ATTICA,C=GR" 	-keypass mypass -keystore plainserver.jks -storepass mypass
+## Build
 
-$ keytool -genkeypair -alias plainclientkeys -keyalg RSA -dname "CN=PlainServer,OU=PADA,O=CS,L=ATHENS,S=ATTICA,C=GR" 	-keypass mypass -keystore plainclient.jks -storepass mypass
+```bash
+./gradlew build
+```
 
-Export the server public certificate and create a seperate keystore
+## Certificate Setup
 
-$ keytool -exportcert -alias plainserverkeys -file serverpub.cer -keystore plainserver.jks -storepass mypass
+Generate PKCS12 keystores for mutual TLS authentication:
 
-Certificate stored in file <serverpub.cer>
+```bash
+mkdir keystore && cd keystore
 
-$ keytool -importcert -keystore serverpub.jks -alias serverpub -file serverpub.cer	     -storepass mypass
+# Generate server keypair
+keytool -genkeypair -alias server -keyalg RSA -keysize 2048 \
+  -dname "CN=ChatServer,OU=Dev,O=SSLchat,L=Athens,C=GR" \
+  -keystore server.p12 -storetype PKCS12 -storepass changeit
 
-Trust this certificate? [no]: yes
-Certificate was added to keystore
+# Generate client keypair
+keytool -genkeypair -alias client -keyalg RSA -keysize 2048 \
+  -dname "CN=ChatClient,OU=Dev,O=SSLchat,L=Athens,C=GR" \
+  -keystore client.p12 -storetype PKCS12 -storepass changeit
 
-Export the client public certificate and create a seperate keystore
+# Export and import server certificate into client trust store
+keytool -exportcert -alias server -keystore server.p12 -storepass changeit -file server.cer
+keytool -importcert -alias server -keystore server-trust.p12 -storetype PKCS12 \
+  -storepass changeit -file server.cer -noprompt
 
-$ keytool -exportcert -alias plainclientkeys -file clientpub.cer -keystore plainclient.jks -storepass mypass
+# Export and import client certificate into server trust store
+keytool -exportcert -alias client -keystore client.p12 -storepass changeit -file client.cer
+keytool -importcert -alias client -keystore client-trust.p12 -storetype PKCS12 \
+  -storepass changeit -file client.cer -noprompt
 
-Certificate stored in file <clientpub.cer>
+# Clean up exported certificates
+rm -f server.cer client.cer
+```
 
-$ keytool -importcert -keystore clientpub.jks -alias clientpub -file clientpub.cer -storepass mypass
+## Run
 
-Trust this certificate? [no]: yes
-Certificate was added to keystore
+Start the server:
 
+```bash
+./gradlew run
+```
 
+Start a client (in a separate terminal):
 
-$ ls
-clientpub.cer clientpub.jks plainclient.jks plainserver.jks serverpub.cer serverpub.jks
+```bash
+./gradlew runClient
+```
 
+### Configuration
 
-Remember: put keytool.exe to your path directory so that your cmd may recognise the keytool commands.
+| Environment Variable | Default    | Description          |
+|---------------------|------------|----------------------|
+| `KEYSTORE_PASS`     | `changeit` | Keystore password    |
+
+The server accepts an optional port argument (default: 9001):
+
+```bash
+./gradlew run --args="9002"
+```
+
+## Changes from Legacy Version
+
+- **TLSv1.3** instead of generic TLS (which could negotiate TLS 1.0/1.1)
+- **PKCS12** keystores instead of proprietary JKS format
+- **Thread pool** (`ExecutorService`) instead of raw `Thread` spawning
+- **Concurrent collections** (`ConcurrentHashMap.newKeySet()`) instead of unsynchronized `HashSet`
+- **Null-safe** message reading with proper disconnect handling
+- **Graceful shutdown** via shutdown hook
+- **Configurable** port and keystore password via environment variable
+- **Logging** via `java.util.logging` instead of `System.out.println`
+- **Gradle** build system
+- **Proper project structure** (`src/main/java/ssl/chat/`)
